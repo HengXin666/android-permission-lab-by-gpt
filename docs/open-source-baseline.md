@@ -1,17 +1,33 @@
-# Open-source Android permission baseline
+# Native Android permission baseline
 
-This repository intentionally uses `getActivity/XXPermissions` as the Android permission demo baseline in CI.
+This repository now uses a real native Android demo app under `native-android/`.
+
+The native app is intentionally based on the open-source `getActivity/XXPermissions` permission framework instead of a hand-written Capacitor Android shell.
 
 ## Why XXPermissions
 
 - It is a public Android permission framework focused on modern Android permission compatibility.
-- It provides a demo app under the upstream repository's `app` module.
-- It is more relevant to Chinese Android development than Google-only samples because it tracks many Android permission version differences and has Chinese documentation.
-- It is licensed under Apache-2.0.
+- It has Chinese documentation and is closer to Chinese Android development practice than Google-only samples.
+- It provides APIs for dangerous runtime permissions and many Android special-access permissions.
+- The upstream README currently documents these dependencies:
+
+```gradle
+implementation 'com.github.getActivity:DeviceCompat:2.6'
+implementation 'com.github.getActivity:XXPermissions:28.2'
+```
 
 Upstream:
 
 - <https://github.com/getActivity/XXPermissions>
+
+## Current repository layout
+
+```text
+native-android/                         Pure native Android permission demo
+native-android/app/src/main/...         Java Activity + OEM settings router
+src/                                    React/Web permission lab
+android/                                Old Capacitor shell, kept only as reference for now
+```
 
 ## CI behavior
 
@@ -20,35 +36,44 @@ The GitHub Actions workflow has two jobs:
 1. `Web permission lab build`
    - Builds this repository's React/Vite permission lab.
 
-2. `Open-source Android permission demo smoke build`
-   - Clones `getActivity/XXPermissions`.
-   - Builds its demo APK with `./gradlew :app:assembleDebug`.
-   - Uploads the APK artifact when available.
+2. `Native Android XXPermissions build`
+   - Builds `native-android` with:
 
-This is deliberate. The previously hand-written Capacitor Android shell was not generated from a standard Capacitor template and kept failing during Gradle evaluation. For now, CI should prove two stable things:
+   ```bash
+   gradle -p native-android :app:assembleDebug --stacktrace
+   ```
 
-- our cross-platform permission model and debug UI can compile;
-- a mature open-source Android permission demo can compile as the native reference.
+   - Uploads the generated debug APK artifact.
+
+## Native app behavior
+
+The native app demonstrates:
+
+- camera
+- microphone
+- foreground location
+- background location
+- post notifications
+- photo/media read
+- Bluetooth scan/connect
+- nearby Wi-Fi devices
+- overlay / floating window
+- exact alarm
+- manage all files
+- ignore battery optimization
+- get installed apps
+- OEM autostart manual settings
+- OEM background popup manual settings
+
+Standard Android runtime and special-access permissions go through XXPermissions.
+
+OEM-only capabilities such as autostart and background popup are treated as manual settings flows because they do not have a stable Android runtime permission prompt.
 
 ## Future migration plan
 
-When this repository needs a real native Android app instead of an open-source smoke reference, prefer one of these approaches:
+After the native app is stable, there are two possible directions:
 
-1. Generate a standard Capacitor Android project locally with:
+1. Keep `native-android` as the real Android permission laboratory and use the React app only as the cross-platform model/UI reference.
+2. Regenerate a standard Capacitor Android project locally, then bridge the proven native permission adapter back into Capacitor.
 
-   ```bash
-   npm install
-   npm run build
-   npx cap add android
-   npx cap sync android
-   ```
-
-   Then commit the entire generated Android project, including Gradle wrapper files.
-
-2. Or create a pure native Android demo module using XXPermissions as the dependency:
-
-   ```gradle
-   implementation 'com.github.getActivity:XXPermissions:<version>'
-   ```
-
-3. Keep OEM-only capabilities such as autostart, background popup, and battery unrestricted as manual settings flows. Do not model them as normal runtime permissions.
+Do not hand-write a partial Capacitor Android project again; use the official Capacitor generator if that route is needed.

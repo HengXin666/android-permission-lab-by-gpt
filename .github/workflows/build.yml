@@ -42,10 +42,13 @@ jobs:
           path: dist
           if-no-files-found: error
 
-  xxpermissions-smoke:
-    name: Open-source Android permission demo smoke build
+  native-android:
+    name: Native Android XXPermissions build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -58,16 +61,17 @@ jobs:
       - name: Install Android platform
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Clone XXPermissions
-        run: git clone --depth=1 https://github.com/getActivity/XXPermissions.git upstream/XXPermissions
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: 8.10.2
 
-      - name: Build XXPermissions demo APK
-        working-directory: upstream/XXPermissions
-        run: ./gradlew :app:assembleDebug --stacktrace
+      - name: Build native Android debug APK
+        run: gradle -p native-android :app:assembleDebug --stacktrace
 
-      - name: Upload XXPermissions demo APK
+      - name: Upload native Android APK
         uses: actions/upload-artifact@v4
         with:
-          name: xxpermissions-demo-apk
-          path: upstream/XXPermissions/app/build/outputs/apk/debug/*.apk
-          if-no-files-found: warn
+          name: native-permission-lab-debug-apk
+          path: native-android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error

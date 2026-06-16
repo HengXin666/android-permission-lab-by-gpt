@@ -10,9 +10,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.provider.Settings;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -142,7 +140,7 @@ public final class MainActivity extends Activity {
                 return;
             }
             XXPermissions.with(this)
-                .permission(item.permissions)
+                .permissions(item.permissions)
                 .request((grantedList, deniedList) -> {
                     boolean ok = deniedList.isEmpty();
                     Toast.makeText(this, ok ? "Granted: " + grantedList.size() : "Denied: " + deniedList.size(), Toast.LENGTH_SHORT).show();

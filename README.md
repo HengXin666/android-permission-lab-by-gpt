@@ -1,8 +1,16 @@
 # android-permission-lab-by-gpt
 
-A modern Android/Web permission lab for React + Capacitor apps.
+A modern Android/Web permission lab.
 
-目标：把业务层从 Android 原生权限 API 中隔离出来，用一套 TypeScript `PermissionBroker` 同时覆盖：
+当前路线：
+
+- `src/`：React/Web 权限模型与调试 UI。
+- `native-android/`：原生 Android 权限实验 App，基于 `getActivity/XXPermissions`。
+- `android/`：旧 Capacitor Android 壳，仅作为参考保留；不要继续在 CI 中构建它。
+
+## Goals
+
+目标：把业务层从 Android 原生权限 API 中隔离出来，用一套能力模型同时覆盖：
 
 - Web browser permissions
 - Android runtime permissions
@@ -12,31 +20,54 @@ A modern Android/Web permission lab for React + Capacitor apps.
 
 > This is an example/lab project, not a drop-in production SDK. The OEM settings pages are intentionally best-effort because vendors change private Activity names across ROM versions.
 
-## Repo goals
-
-1. Business code never calls native Android permission APIs directly.
-2. All permission checks and requests go through `PermissionBroker`.
-3. Every permission has a real capability test, not just a `granted` flag.
-4. Development can reproduce permission states with ADB scripts.
-5. OEM permissions are modeled explicitly as `manualRequired`, not hidden inside runtime permissions.
-
-## Quick start
+## Quick start: Web lab
 
 ```bash
 npm install
 npm run dev
+npm run build
 ```
 
-Android build path:
+## Quick start: Native Android lab
 
 ```bash
-npm install
-npm run build
-npx cap sync android
-npx cap open android
+gradle -p native-android :app:assembleDebug
 ```
 
-The repository includes an Android plugin skeleton under `android/app/src/main/java/im/hengxin/permissionlab` for reference. If you regenerate the Android folder with Capacitor, copy the plugin sources back into the generated app module.
+The debug APK will be generated under:
+
+```text
+native-android/app/build/outputs/apk/debug/
+```
+
+## Native Android baseline
+
+`native-android/` uses:
+
+```gradle
+implementation 'com.github.getActivity:DeviceCompat:2.6'
+implementation 'com.github.getActivity:XXPermissions:28.2'
+```
+
+The native app demonstrates:
+
+- camera
+- microphone
+- foreground location
+- background location
+- post notifications
+- photo/media read
+- Bluetooth scan/connect
+- nearby Wi-Fi devices
+- overlay / floating window
+- exact alarm
+- manage all files
+- ignore battery optimization
+- get installed apps
+- OEM autostart manual settings
+- OEM background popup manual settings
+
+Standard Android runtime and special-access permissions go through XXPermissions. OEM-only capabilities such as autostart and background popup are handled as manual settings flows.
 
 ## Permission model
 
@@ -92,10 +123,9 @@ Scenarios:
 
 ## Files to inspect
 
+- `native-android/app/src/main/java/im/hengxin/nativepermissionlab/MainActivity.java`: native Android permission lab UI
+- `native-android/app/src/main/java/im/hengxin/nativepermissionlab/OemSettingsRouter.java`: China ROM manual settings intents
 - `src/permissions/types.ts`: cross-platform permission model
 - `src/permissions/webPermissionBroker.ts`: browser implementation
-- `src/permissions/capacitorPermissionBroker.ts`: Capacitor bridge
-- `android/app/src/main/java/im/hengxin/permissionlab/AndroidPermissionBrokerPlugin.kt`: Android plugin skeleton
-- `android/app/src/main/java/im/hengxin/permissionlab/OemSettingsRouter.kt`: OEM settings intents
 - `scripts/adb-reset-permissions.sh`: reproducible debug reset
 - `.agent/skills/android-permission-broker/SKILL.md`: AI-agent rule set for future changes

@@ -1,131 +1,30 @@
-# android-permission-lab-by-gpt
+# Android Permission Lab
 
-A modern Android/Web permission lab.
+Kotlin 原生 Android 权限申请模板项目。项目按功能拆分页面，重点演示真实权限申请、对应能力调用和国产 Android 系统上的测试入口。
 
-当前路线：
+## 功能页面
 
-- `src/`：React/Web 权限模型与调试 UI。
-- `native-android/`：原生 Android 权限实验 App，基于 `getActivity/XXPermissions`。
-- `android/`：旧 Capacitor Android 壳，仅作为参考保留；不要继续在 CI 中构建它。
+- 通知：运行时通知权限、普通通知、常驻通知、锁屏可见通知。
+- 闹钟/待办：`AlarmManager.setExactAndAllowWhileIdle`、精确闹钟设置、开机后恢复提醒。
+- 传感器/GPS：加速度传感器、定位权限、前台服务后台采集。
+- 存储：DataStore 持久化本地状态。
+- 文件：Storage Access Framework 选择并读取本地文件，媒体读取权限示例。
+- 相机：申请 `CAMERA` 并调用系统相机拍照保存。
+- 短信：申请 `READ_SMS` 并读取最近短信。
+- 系统：MIUI/ColorOS/OriginOS/EMUI 等自启动、省电、通知、悬浮窗、精确闹钟入口。
 
-## Goals
-
-目标：把业务层从 Android 原生权限 API 中隔离出来，用一套能力模型同时覆盖：
-
-- Web browser permissions
-- Android runtime permissions
-- Android special access permissions
-- China ROM / OEM manual permissions, especially Xiaomi / HyperOS style settings
-- Stable debug and reproducible permission reset flows
-
-> This is an example/lab project, not a drop-in production SDK. The OEM settings pages are intentionally best-effort because vendors change private Activity names across ROM versions.
-
-## Quick start: Web lab
+## 构建
 
 ```bash
-npm install
-npm run dev
-npm run build
+./gradlew :app:assembleDebug
 ```
 
-## Quick start: Native Android lab
+## 国产系统测试要点
 
-```bash
-gradle -p native-android :app:assembleDebug
-```
+标准运行时权限不等于厂商 ROM 的后台能力。请在真机上额外检查：
 
-The debug APK will be generated under:
-
-```text
-native-android/app/build/outputs/apk/debug/
-```
-
-## Native Android baseline
-
-`native-android/` uses:
-
-```gradle
-implementation 'com.github.getActivity:DeviceCompat:2.6'
-implementation 'com.github.getActivity:XXPermissions:28.2'
-```
-
-The native app demonstrates:
-
-- camera
-- microphone
-- foreground location
-- background location
-- post notifications
-- photo/media read
-- Bluetooth scan/connect
-- nearby Wi-Fi devices
-- overlay / floating window
-- exact alarm
-- manage all files
-- ignore battery optimization
-- get installed apps
-- OEM autostart manual settings
-- OEM background popup manual settings
-
-Standard Android runtime and special-access permissions go through XXPermissions. OEM-only capabilities such as autostart and background popup are handled as manual settings flows.
-
-## Permission model
-
-```ts
-PermissionId =
-  | camera
-  | microphone
-  | location.foreground
-  | location.background
-  | notification
-  | photo.read
-  | file.manage
-  | bluetooth
-  | wifi.nearby
-  | overlay
-  | exactAlarm
-  | autostart
-  | backgroundPopup
-  | batteryUnrestricted
-```
-
-Common states:
-
-- `granted`: permission appears granted
-- `denied`: denied but may still be requestable
-- `promptable`: browser/native system may show a prompt
-- `blocked`: user selected don't ask again or system cannot prompt
-- `limited`: partial access, such as limited photos
-- `manualRequired`: cannot be requested by runtime API; guide user to settings
-- `unsupported`: current platform does not support this ability
-- `unknown`: unable to determine
-
-## Debug matrix
-
-Recommended real devices:
-
-- AOSP / Pixel Emulator: Android 11, 12, 13, 14, 15+
-- Xiaomi / Redmi: MIUI and HyperOS
-- OPPO / OnePlus: ColorOS
-- vivo / iQOO: OriginOS
-- Huawei / Honor: EMUI / HarmonyOS variants
-
-Scenarios:
-
-- first install
-- deny once
-- deny twice / don't ask again
-- app upgrade
-- targetSdk upgrade
-- manual enable from settings
-- lock screen + background + clear recent tasks
-- reboot + autostart
-
-## Files to inspect
-
-- `native-android/app/src/main/java/im/hengxin/nativepermissionlab/MainActivity.java`: native Android permission lab UI
-- `native-android/app/src/main/java/im/hengxin/nativepermissionlab/OemSettingsRouter.java`: China ROM manual settings intents
-- `src/permissions/types.ts`: cross-platform permission model
-- `src/permissions/webPermissionBroker.ts`: browser implementation
-- `scripts/adb-reset-permissions.sh`: reproducible debug reset
-- `.agent/skills/android-permission-broker/SKILL.md`: AI-agent rule set for future changes
+- 通知：通知栏、横幅、锁屏显示、常驻通知是否被折叠或静默。
+- 后台：自启动、省电策略、锁屏清理、后台弹出界面。
+- 闹钟：精确闹钟授权后，杀后台、清最近任务、重启手机后是否还能提醒。
+- 定位：前台服务通知是否存在，后台定位是否需要从应用详情页单独开启。
+- 短信/相机/文件：确认权限拒绝、仅本次允许、永久拒绝后的页面行为。

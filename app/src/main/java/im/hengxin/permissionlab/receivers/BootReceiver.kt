@@ -20,8 +20,14 @@ class BootReceiver : BroadcastReceiver() {
             try {
                 val state = LabStore.state(context).first()
                 if (state.alarmEnabled && state.alarmAt > System.currentTimeMillis()) {
-                    AlarmScheduler.schedule(context, state.alarmAt)
+                    AlarmScheduler.scheduleAlarm(context, state.alarmAt)
                     NotificationHelper.showPersistent(context, "已恢复待办提醒", "开机后已重新注册保存的闹钟。")
+                }
+                if (state.scheduledNotificationEnabled && state.scheduledNotificationAt > System.currentTimeMillis()) {
+                    AlarmScheduler.scheduleNotification(context, state.scheduledNotificationAt)
+                }
+                if (state.lockScreenNotificationEnabled && state.lockScreenNotificationAt > System.currentTimeMillis()) {
+                    AlarmScheduler.scheduleLockScreenNotification(context, state.lockScreenNotificationAt)
                 }
             } finally {
                 pendingResult.finish()

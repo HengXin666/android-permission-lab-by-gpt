@@ -18,6 +18,8 @@ object NotificationHelper {
     const val ID_PERSISTENT = 1002
     const val ID_ALARM = 1003
     const val ID_SENSOR = 1004
+    const val ID_SCHEDULED = 1005
+    const val ID_LOCK_SCREEN = 1006
 
     fun ensureChannels(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)
@@ -64,6 +66,17 @@ object NotificationHelper {
             .build()
     }
 
+    fun lockScreenNotification(context: Context, title: String, text: String): Notification {
+        ensureChannels(context)
+        return base(context, CHANNEL_ALARM, title, text)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setDefaults(NotificationCompat.DEFAULT_ALL)
+            .setFullScreenIntent(contentIntent(context), true)
+            .build()
+    }
+
     fun sensorNotification(context: Context, text: String): Notification {
         ensureChannels(context)
         return base(context, CHANNEL_PERSISTENT, "后台传感器采集中", text)
@@ -72,19 +85,22 @@ object NotificationHelper {
             .build()
     }
 
-    private fun base(context: Context, channelId: String, title: String, text: String): NotificationCompat.Builder {
-        val pendingIntent = PendingIntent.getActivity(
+    private fun contentIntent(context: Context): PendingIntent {
+        return PendingIntent.getActivity(
             context,
             0,
             Intent(context, MainActivity::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
+    }
+
+    private fun base(context: Context, channelId: String, title: String, text: String): NotificationCompat.Builder {
         return NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_stat_permission)
             .setContentTitle(title)
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-            .setContentIntent(pendingIntent)
+            .setContentIntent(contentIntent(context))
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
     }
 }

@@ -14,7 +14,11 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.os.IBinder
 import androidx.core.content.ContextCompat
+import im.hengxin.permissionlab.core.LabStore
 import im.hengxin.permissionlab.core.NotificationHelper
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 class SensorForegroundService : Service(), SensorEventListener, LocationListener {
@@ -40,6 +44,9 @@ class SensorForegroundService : Service(), SensorEventListener, LocationListener
     override fun onDestroy() {
         sensorManager.unregisterListener(this)
         locationManager.removeUpdates(this)
+        CoroutineScope(Dispatchers.IO).launch {
+            LabStore.saveSensorService(this@SensorForegroundService, false)
+        }
         super.onDestroy()
     }
 
